@@ -1,0 +1,85 @@
+import csv
+import random
+
+# Function to read the data from CSV
+def read_student_data(filename):
+    students = []
+    with open(filename, mode='r') as file:
+        csv_reader = csv.DictReader(file)
+        for row in csv_reader:
+            student = {
+                "Tutorial Group": row["Tutorial Group"],
+                "Student ID": row["Student ID"],
+                "School": row["School"],
+                "Name": row["Name"],
+                "Gender": row["Gender"],
+                "CGPA": float(row["CGPA"])
+            }
+            students.append(student)
+    return students
+
+# Function to create balanced teams
+def create_teams(students, team_size=5):
+    teams = []
+    # Sort students by CGPA for balancing
+    students = sorted(students, key=lambda x: x["CGPA"], reverse=True)
+    
+    # Create a structure to track the team formation
+    current_team = []
+    
+    # A function to check if a team is balanced
+    def is_team_balanced(team):
+        schools = [student["School"] for student in team]
+        genders = [student["Gender"] for student in team]
+        
+        # Check for school majority
+        school_majority = max(schools.count(school) for school in set(schools))
+        if school_majority > team_size // 2:
+            return False
+        
+        # Check for gender majority
+        gender_majority = max(genders.count(gender) for gender in set(genders))
+        if gender_majority > team_size // 2:
+            return False
+        
+        return True
+    
+    # Form teams while considering balance criteria
+    for student in students:
+        current_team.append(student)
+        
+        if len(current_team) == team_size:
+            if is_team_balanced(current_team):
+                teams.append(current_team)
+            else:
+                random.shuffle(current_team)  # Reshuffle to avoid imbalance
+                teams.append(current_team)
+            current_team = []
+    
+    # If some students are left ungrouped, assign them to the last team
+    if current_team:
+        teams[-1].extend(current_team)
+    
+    return teams
+
+# Function to save the formed teams into a new CSV file
+def save_teams_to_csv(teams, filename):
+    with open(filename, mode='w', newline='') as file:
+        fieldnames = ["Tutorial Group", "Student ID", "School", "Name", "Gender", "CGPA", "Team Assigned"]
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for team_number, team in enumerate(teams, start=1):
+            for student in team:
+                student["Team Assigned"] = team_number
+                writer.writerow(student)
+
+# Main function to run the process
+def main():
+    students = read_student_data("records.csv")  # Read data from records.csv
+    teams = create_teams(students, team_size=5)  # Create teams of 5
+    save_teams_to_csv(teams, "team_allocation.csv")  # Save results to CSV
+
+# Run the main function
+if __name__ == "__main__":
+    main()
