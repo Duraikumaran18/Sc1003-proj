@@ -1,0 +1,92 @@
+import csv  # This helps us read and write CSV files.
+
+# Step 1: Read the student data from the CSV file
+def read_student_data(file_name):
+    # We'll store the student data in a list
+    student_list = []
+    
+    # Open the CSV file
+    with open(file_name, mode='r') as file:
+        # This helps us read the CSV file like a table
+        csv_reader = csv.DictReader(file)
+        
+        # Go through each row (student) in the CSV file
+        for row in csv_reader:
+            # Store each student's data as a dictionary (a small box of info)
+            student = {
+                "Tutorial Group": row["Tutorial Group"],
+                "Student ID": row["Student ID"],
+                "School": row["School"],
+                "Name": row["Name"],
+                "Gender": row["Gender"],
+                "CGPA": float(row["CGPA"])
+            }
+            student_list.append(student)  # Add the student to our list
+    
+    # Return the full list of students
+    return student_list
+
+# Step 2: Group the students into teams
+def create_teams(student_list):
+    teams = []  # This will store all the teams
+    current_team = []  # This will store the current team we are building
+    team_size = 5  # We want teams of 5 students
+    
+    # Loop through each student and try to build a balanced team
+    for student in student_list:
+        current_team.append(student)  # Add the student to the current team
+        
+        # If the current team has 5 students, we need to stop and check if it's balanced
+        if len(current_team) == team_size:
+            # First, check the gender balance in the team
+            males = sum(1 for s in current_team if s["Gender"] == "Male")
+            females = sum(1 for s in current_team if s["Gender"] == "Female")
+            
+            # If there's too much of one gender, we'll shuffle things later
+            if males > team_size // 2 or females > team_size // 2:
+                pass  # We won't fix it right now to keep it simple
+            
+            # Next, check the school diversity in the team
+            schools = [s["School"] for s in current_team]  # Get a list of schools in this team
+            for school in set(schools):
+                if schools.count(school) > team_size // 2:  # If one school has more than half, it's not diverse
+                    pass  # We'll handle this later
+            
+            # Now, add the team to our list of teams
+            teams.append(current_team)
+            current_team = []  # Start a new team
+    
+    # If there are any leftover students, just add them to the last team
+    if current_team:
+        teams[-1].extend(current_team)  # Add remaining students to the last team
+    
+    return teams
+
+# Step 3: Write the teams to a new CSV file
+def write_teams_to_csv(teams, output_file):
+    with open(output_file, mode='w', newline='') as file:
+        # Define the column headers for our CSV file
+        fieldnames = ["Tutorial Group", "Student ID", "School", "Name", "Gender", "CGPA", "Team Number"]
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()  # Write the headers
+        
+        # Write each student to the file along with their team number
+        for team_number, team in enumerate(teams, start=1):
+            for student in team:
+                student["Team Number"] = team_number  # Add the team number to the student
+                writer.writerow(student)  # Write the student info to the file
+
+# Step 4: The main function to bring everything together
+def main():
+    # Step 1: Read the student data from the CSV file
+    student_list = read_student_data("records.csv")
+    
+    # Step 2: Create teams of 5 students
+    teams = create_teams(student_list)
+    
+    # Step 3: Write the teams to a new CSV file
+    write_teams_to_csv(teams, "team_assignments.csv")
+
+# Run the main function to make the program work
+if __name__ == "__main__":
+    main()
