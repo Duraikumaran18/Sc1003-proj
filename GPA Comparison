@@ -1,0 +1,64 @@
+import matplotlib.pyplot as plt
+
+# Load the data manually from CSV file
+file_path = "check.csv"
+team_data = {}  # Dictionary to store data per team
+student_count = 0  # Counter to track the number of students processed
+
+try:
+  with open(file_path, "r") as file:
+    next(file)  # Skip header
+    for line in file:
+      parts = line.strip().split(",")
+      tutorial_group = parts[0]
+      team_number = parts[1]
+      cgpa = float(parts[5])  # Attempt to convert CGPA to float
+
+      # Check if enough students for a team (5 students per team)
+      if student_count % 5 == 0:
+        # Create a new team entry
+        team_key = (tutorial_group, team_number)
+        team_data[team_key] = {
+            "cgpa_sum": 0,  # Total CGPA for the team
+            "student_count": 0,  # Number of students in the team
+        }
+      
+      # Add student data to the current team
+      team_data[team_key]["cgpa_sum"] += cgpa
+      team_data[team_key]["student_count"] += 1
+      student_count += 1
+
+except FileNotFoundError:
+  print(f"Error: File not found: {file_path}")
+  exit()
+
+# Check if any data was loaded
+if not team_data:
+  print("Error: No data found in the CSV file.")
+  exit()
+
+# Calculate average CGPA for each team
+for team_key, team_info in team_data.items():
+  if team_info["student_count"] == 5:  # Ensure a full team of 5 students
+    team_data[team_key]["average_cgpa"] = team_info["cgpa_sum"] / team_info["student_count"]
+  else:
+    print(f"Warning: Team {team_key} has {team_info['student_count']} students (incomplete team)")
+
+# Calculate the number of teams with average CGPA in range 3.7 - 4.3
+count_teams_in_range = sum(1 for team, info in team_data.items() if 3.9 <= info.get("average_cgpa", 0) <= 4.1)
+remaining_teams = 1200 - count_teams_in_range
+
+# Data for the bars
+bars = ['Teams with CGPA 3.7-4.3', 'Remaining Teams']
+values = [count_teams_in_range, remaining_teams]
+
+# Plotting the bar chart (rest of the code remains the same)
+plt.figure(figsize=(8, 6))
+plt.bar(bars, values, color=['#4CAF50', '#FFC107'])
+
+# Display values on top of the bars
+for i, v in enumerate(values):
+  plt.text(i, v + 20, str(v), ha='center', fontsize=12)
+
+plt.tight_layout()
+plt.show()
