@@ -1,0 +1,65 @@
+import csv
+import matplotlib.pyplot as plt
+
+# Define variables to store data
+team_school_counts = {}
+school_counts = {}
+
+# Open the CSV file
+with open("check.csv", newline='') as csvfile:
+  reader = csv.DictReader(csvfile)
+
+  # Iterate through each row in the CSV
+  for row in reader:
+    tutorial_group = row["Tutorial Group"]
+    team_number = row["Team Number"]
+    school = row["School"]
+
+    # Update team_school_counts dictionary
+    key = (tutorial_group, team_number)
+    if key not in team_school_counts:
+      team_school_counts[key] = set()
+    team_school_counts[key].add(school)
+
+    # Update school_counts dictionary
+    if school not in school_counts:
+      school_counts[school] = 0
+    school_counts[school] += 1
+
+# Calculate counts based on distinct schools
+count_5_schools = 0
+count_4_schools = 0
+count_3_schools = 0
+count_2_schools = 0
+count_1_school = 0
+
+# Iterate through team_school_counts and count teams with specific school counts
+for schools in team_school_counts.values():
+  if len(schools) == 5:
+    count_5_schools += 1
+  elif len(schools) == 4:
+    count_4_schools += 1
+  elif len(schools) == 3:
+    count_3_schools += 1
+  elif len(schools) == 2:
+    count_2_schools += 1
+  elif len(schools) == 1:
+    count_1_schools += 1
+
+# Ensure total number of teams adds up to 1200
+assert count_5_schools + count_4_schools + count_3_schools + count_2_schools + count_1_school == 1200, "Total teams must add up to 1200!"
+
+# Data for the bars
+bars = ['5 Distinct Schools', '4 Distinct Schools', '3 Distinct Schools', '2 Distinct Schools', '1 Distinct School']
+values = [count_5_schools, count_4_schools, count_3_schools, count_2_schools, count_1_school]
+
+# Plotting the bar chart (rest of the code remains the same)
+plt.figure(figsize=(12, 6))
+plt.bar(bars, values, color=['#4CAF50', '#FFC107', '#2196F3', '#FF5722', '#9C27B0'])
+
+# Display values on top of the bars
+for i, v in enumerate(values):
+    plt.text(i, v + 20, str(v), ha='center', fontsize=12)
+
+plt.tight_layout()
+plt.show()
