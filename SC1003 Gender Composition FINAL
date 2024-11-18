@@ -1,0 +1,104 @@
+from collections import Counter
+import matplotlib.pyplot as plt
+
+
+def load_group_data(filename="check.csv"):
+    """
+    Loads group data from a CSV file.
+
+    Args:
+        filename (str, optional): The filename of the CSV file. Defaults to "check.csv".
+
+    Returns:
+        list: A list of dictionaries representing each row in the CSV file.
+    """
+    group_data = []
+    with open(filename, "r") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            group_data.append(row)
+    return group_data
+
+
+def count_teams(group_data):
+    """
+    Counts the number of boys and girls in each team and filters for teams with 5 members.
+
+    Args:
+        group_data (list): A list of dictionaries representing each row in the CSV file.
+
+    Returns:
+        dict: A dictionary where keys are tuples (Tutorial Group, Team Number) and values are dictionaries with 'Male' and 'Female' keys representing counts.
+    """
+    team_counts = {}
+    for row in group_data:
+        tutorial_group = row["Tutorial Group"]
+        team_number = int(row["Team Number"])
+        gender = row["Gender"]
+        key = (tutorial_group, team_number)
+        team_counts.setdefault(key, {"Male": 0, "Female": 0})[gender] += 1
+
+    # Filter teams with 5 members
+    valid_teams = {key: count for key, count in team_counts.items() if sum(count.values()) == 5}
+    return valid_teams
+
+
+def calculate_distribution(valid_teams):
+    """
+    Calculates the distribution of team gender composition (number of boys and girls).
+
+    Args:
+        valid_teams (dict): A dictionary where keys are tuples (Tutorial Group, Team Number) and values are dictionaries with 'Male' and 'Female' keys representing counts.
+
+    Returns:
+        Counter: A Counter object containing the distribution of team gender composition.
+    """
+    distribution = Counter()
+    for _, team_count in valid_teams.items():
+        boys = team_count["Male"]
+        girls = team_count["Female"]
+        distribution[(girls, boys)] += 1
+    return distribution
+
+
+def format_labels(distribution):
+    """
+    Formats labels for the pie chart based on team gender composition (number of boys and girls).
+
+    Args:
+        distribution (Counter): A Counter object containing the distribution of team gender composition.
+
+    Returns:
+        list: A list of formatted labels.
+    """
+    return [f"{y}G{x}B" for x, y in distribution.items()]
+
+
+def plot_pie_chart(distribution, labels):
+    """
+    Plots a pie chart showing the distribution of team gender composition.
+
+    Args:
+        distribution (Counter): A Counter object containing the distribution of team gender composition.
+        labels (list): A list of formatted labels.
+    """
+    plt.figure(figsize=(8, 8))
+    plt.pie(distribution.values(), labels=labels, autopct='%1.1f%%', startangle=140)
+    plt.title("Distribution of Teams with 5 Members (Gender Composition)")
+    plt.show()
+
+
+# Load data
+group_data = load_group_data("check.csv")
+
+# Count teams and filter for 5 members
+valid_teams = count_teams(group_data)
+
+# Calculate distribution
+distribution = calculate_distribution(valid_teams)
+
+# Format labels
+labels = format_labels(distribution)
+
+# Plot pie chart
+plot_pie_chart(distribution, labels)
